@@ -1,0 +1,51 @@
+rm(list=ls())
+library(pdftools)
+library(dplyr)
+library(tidyverse)
+library(tidytext)
+library(tokenizers)
+library(stopwords)
+library(readr)
+
+setwd("C:/Users/bjark/OneDrive/Skrivebord/prospekt-folder")
+names <- list.files(pattern = "pdf$")
+
+group_liste <- list()
+
+for (j in 1:length(names)) {
+  temp <- pdf_text(paste0("C:/Users/bjark/OneDrive/Skrivebord/prospekt-folder/",names[j]))
+  temp <- temp[-c(1:2)]  #Deletes first and second page, as these usually contains front page and list of content
+  temp <- read_lines(temp)
+  
+  group_liste <- append(group_liste, temp) #Might be a bad idea - below loops might need to be loaded below.
+  rm("temp")
+  print(j)
+}
+
+
+afdeling <- c("Stabil", "Balance", "Aktiv", "Private Banking Lav", "Private Banking Høj","Korte Obligationer KL", "Danske Aktier KL")   #Load complete list of names from SVIP
+lines <- vector(length = length(afdeling))
+
+for (i in 1:length(afdeling)){
+  print(paste(afdeling[i]))
+  if(length(grep(paste0("^",afdeling[i],"$"), group_liste)) > 0) {
+    lines[i] <- grep(paste0("^",afdeling[i],"$"), group_liste)[1]
+  }
+  else if(length(grep(paste0("^",afdeling[i],"$"), group_liste)) == 0) {
+    print("goes with second")
+    lines[i] <- grep(paste("Afdeling",afdeling[i]), group_liste)
+  }
+  else {
+  print("new error at:")
+  print(paste(afdeling[i]))
+  }
+}
+
+lines<-sort(lines)
+
+afdeling_liste <- list()
+for(i in 1:length(lines)) {
+  start <- lines[i]
+  ifelse(i==length(lines), stop <- start+25 , stop <- lines[i+1]-1)
+  afdeling_liste <- append(afdeling_liste, list(spar[start:stop]))
+}
